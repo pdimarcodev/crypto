@@ -16,8 +16,8 @@ import {
 import {SelectInput} from '../../components/SelectInput';
 import {getOptions, isBuyOperationType} from '../../helpers';
 import {Spacer} from '../../components/Spacer';
-import dayjs from '../../helpers/dayjs';
 import {RadioButton} from '../../components/RadioButton';
+import dayjs from '../../helpers/dayjs';
 
 /**
  * Types

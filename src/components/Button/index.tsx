@@ -35,7 +35,12 @@ export const Button: FC<ButtonProps> = ({
       accessibilityHint={disabled ? 'disabled' : undefined}
       disabled={disabled || loading || selected}
       onPress={onPress}
-      style={({pressed}) => [styles.button, {opacity: pressed ? 0.8 : 1}]}>
+      style={({pressed}) => [
+        styles.button,
+
+        disabled && styles.btnDisabled,
+        {opacity: pressed ? 0.8 : 1},
+      ]}>
       {loading ? (
         <ActivityIndicator color={'white'} />
       ) : (

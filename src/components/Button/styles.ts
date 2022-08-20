@@ -8,9 +8,12 @@ export const styles = StyleSheet.create({
     borderRadius: 5,
     height: 60,
     backgroundColor: 'purple',
-    // position: 'absolute',
-    // bottom: 100,
+    position: 'absolute',
+    bottom: 100,
     alignSelf: 'center',
+  },
+  btnDisabled: {
+    backgroundColor: 'grey',
   },
   text: {
     textTransform: 'uppercase',
