@@ -11,7 +11,7 @@ interface ISelectInput<ContentType> {
   name: Path<ContentType>;
   data: any[];
   rules?: Object;
-  placeholder: string;
+  placeholder?: string;
 }
 
 /**
@@ -30,12 +30,13 @@ export function SelectInput<ContentType>({
       control={control}
       name={name}
       rules={rules}
-      render={({field: {onChange}}) => (
+      render={({field: {value, onChange}}) => (
         <RNPickerSelect
           placeholder={{
             label: placeholder,
             value: '',
           }}
+          value={value}
           onValueChange={onChange}
           items={data}
           useNativeAndroidPickerStyle={false}

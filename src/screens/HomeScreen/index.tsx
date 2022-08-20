@@ -1,9 +1,10 @@
-import {FC, useMemo, useState} from 'react';
+import {FC, useCallback, useEffect, useMemo, useState} from 'react';
 import {Alert, Keyboard, Pressable, Text, View} from 'react-native';
 import {StackScreenProps} from '@react-navigation/stack';
 import {useForm} from 'react-hook-form';
 
 import {NavigationStackParamList} from '../../navigation/navigation';
+import {useOrdersContext} from '../../context/OrdersContext';
 import {FormInput} from '../../components/FormInput';
 import {styles} from './styles';
 import {Button} from '../../components/Button';
@@ -29,16 +30,19 @@ type HomeScreenProps = StackScreenProps<NavigationStackParamList, 'Home'>;
  * Constants
  */
 
-export const NUMERIC_REGEX = /\d/;
+export const FIAT_REGEX = /^\d+(\.\d{1,2})?$/;
+export const CRYPTO_REGEX = /^\d+(\.\d{1,8})?$/;
 
 type OrderForm = Pick<Operation, 'cryptoCurrency' | 'orderType'> & {
   fiatAmount: string;
+  cryptoAmount: string;
 };
 
 const DEFAULT_VALUES: OrderForm = {
   cryptoCurrency: CryptoCurrency.BTC,
   orderType: OrderType.MARKET,
   fiatAmount: '',
+  cryptoAmount: '',
 };
 
 const operationTypeOptions = getOptions(OperationType);
@@ -52,13 +56,17 @@ const price = 20000;
  */
 
 const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
+  const {orders, setOrders} = useOrdersContext();
   const [loading, setLoading] = useState(false);
   const [operationType, setOperationType] = useState<OperationType>(
     OperationType.BUY,
   );
   const {
     control,
+
     handleSubmit,
+    reset,
+    getValues,
     formState: {isDirty, isValid},
   } = useForm<OrderForm>({mode: 'onChange', defaultValues: DEFAULT_VALUES});
 
@@ -67,28 +75,43 @@ const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
     [operationType],
   );
 
-  const onConfirm = async (
-    {cryptoCurrency, orderType, fiatAmount}: OrderForm,
+  const onConfirm = (
+    {cryptoCurrency, orderType, fiatAmount, cryptoAmount}: OrderForm,
     type: OperationType,
   ) => {
-    const fiatAmountToNumber = Number(fiatAmount);
-
-    const cryptoAmount =
-      type === OperationType.BUY
-        ? fiatAmountToNumber / price
-        : fiatAmountToNumber * price;
+    setLoading(true);
+    const fiatAmountToNumber = Number(fiatAmount.replace(',', '.'));
+    const cryptoAmountToNumber = Number(cryptoAmount.replace(',', '.'));
 
     const newOrder: Operation = {
       cryptoCurrency,
       orderType,
-      fiatAmount: fiatAmountToNumber,
+      fiatAmount: !isBuyOperation
+        ? cryptoAmountToNumber * price
+        : fiatAmountToNumber,
       price,
       type,
       createdAt: dayjs(),
-      cryptoAmount,
+      cryptoAmount: isBuyOperation
+        ? fiatAmountToNumber / price
+        : cryptoAmountToNumber,
     };
 
-    console.log({newOrder});
+    if (orderType === OrderType.MARKET) {
+      setLoading(false);
+      return Alert.alert(
+        isBuyOperation
+          ? `You've got ${cryptoCurrency} ${newOrder.cryptoAmount}`
+          : `You've got USD ${newOrder.fiatAmount}`,
+      );
+    }
+
+    setOrders([...orders, newOrder]);
+    reset({...getValues(), fiatAmount: '', cryptoAmount: ''});
+
+    Alert.alert('Limit order processed');
+    setLoading(false);
+    return;
 
     // setLoading(true);
 
@@ -100,8 +123,13 @@ const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
   };
 
   const onSelectOperation = (value: OperationType) => {
+    reset(DEFAULT_VALUES);
     setOperationType(value);
   };
+
+  useEffect(() => {
+    console.log(orders);
+  }, [orders]);
 
   return (
     <>
@@ -129,19 +157,35 @@ const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
           />
           <Spacer />
           <Text>${price}</Text>
-          <FormInput
-            name="fiatAmount"
-            placeholder="amount"
-            control={control}
-            keyboardType="number-pad"
-            rules={{
-              required: true,
-              pattern: {
-                value: NUMERIC_REGEX,
-                message: 'Enter a number',
-              },
-            }}
-          />
+          {isBuyOperation ? (
+            <FormInput
+              name="fiatAmount"
+              placeholder="amount in USD"
+              control={control}
+              keyboardType="numeric"
+              rules={{
+                required: true,
+                // pattern: {
+                //   value: FIAT_REGEX,
+                //   message: 'Enter a number',
+                // },
+              }}
+            />
+          ) : (
+            <FormInput
+              name="cryptoAmount"
+              placeholder="amount in Crypto"
+              control={control}
+              keyboardType="numeric"
+              rules={{
+                required: true,
+                // pattern: {
+                //   value: CRYPTO_REGEX,
+                //   message: 'Enter a number',
+                // },
+              }}
+            />
+          )}
         </View>
 
         <Spacer />
