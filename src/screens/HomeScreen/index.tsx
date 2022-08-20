@@ -39,7 +39,7 @@ const cryptoCurrencyOptions = getOptions(CryptoCurrency);
 
 const orderTypeOptions = getOptions(OrderType);
 
-const price = 6345677;
+const price = 20000;
 
 /**
  * Home Screen
