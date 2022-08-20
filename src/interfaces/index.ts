@@ -1,3 +1,5 @@
+import {Dayjs} from 'dayjs';
+
 export enum OperationType {
   BUY = 'BUY',
   SELL = 'SELL',
@@ -18,6 +20,8 @@ export interface Operation {
   type: OperationType;
   cryptoCurrency: CryptoCurrency;
   orderType: OrderType;
-  amount: string;
+  fiatAmount: number;
+  cryptoAmount: number;
   price: number;
+  createdAt: Dayjs;
 }

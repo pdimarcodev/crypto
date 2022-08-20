@@ -1,4 +1,4 @@
-import {FC, useState} from 'react';
+import {FC, useMemo, useState} from 'react';
 import {Alert, Keyboard, Pressable, Text, View} from 'react-native';
 import {StackScreenProps} from '@react-navigation/stack';
 import {useForm} from 'react-hook-form';
@@ -14,8 +14,10 @@ import {
   OrderType,
 } from '../../interfaces';
 import {SelectInput} from '../../components/SelectInput';
-import {getOptions} from '../../helpers';
+import {getOptions, isBuyOperationType} from '../../helpers';
 import {Spacer} from '../../components/Spacer';
+import dayjs from '../../helpers/dayjs';
+import {RadioButton} from '../../components/RadioButton';
 
 /**
  * Types
@@ -29,14 +31,18 @@ type HomeScreenProps = StackScreenProps<NavigationStackParamList, 'Home'>;
 
 export const NUMERIC_REGEX = /\d/;
 
-const DEFAULT_VALUES: Partial<Operation> = {
-  cryptoCurrency: CryptoCurrency.BTC,
-  orderType: OrderType.MARKET,
-  amount: '',
+type OrderForm = Pick<Operation, 'cryptoCurrency' | 'orderType'> & {
+  fiatAmount: string;
 };
 
-const cryptoCurrencyOptions = getOptions(CryptoCurrency);
+const DEFAULT_VALUES: OrderForm = {
+  cryptoCurrency: CryptoCurrency.BTC,
+  orderType: OrderType.MARKET,
+  fiatAmount: '',
+};
 
+const operationTypeOptions = getOptions(OperationType);
+const cryptoCurrencyOptions = getOptions(CryptoCurrency);
 const orderTypeOptions = getOptions(OrderType);
 
 const price = 20000;
@@ -47,16 +53,42 @@ const price = 20000;
 
 const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
   const [loading, setLoading] = useState(false);
+  const [operationType, setOperationType] = useState<OperationType>(
+    OperationType.BUY,
+  );
   const {
     control,
     handleSubmit,
-
     formState: {isDirty, isValid},
-  } = useForm<Operation>({mode: 'onChange', defaultValues: DEFAULT_VALUES});
+  } = useForm<OrderForm>({mode: 'onChange', defaultValues: DEFAULT_VALUES});
 
-  const onConfirm = async (data: Partial<Operation>, type: OperationType) => {
-    console.log({data});
-    console.log(type);
+  const isBuyOperation = useMemo(
+    () => isBuyOperationType(operationType),
+    [operationType],
+  );
+
+  const onConfirm = async (
+    {cryptoCurrency, orderType, fiatAmount}: OrderForm,
+    type: OperationType,
+  ) => {
+    const fiatAmountToNumber = Number(fiatAmount);
+
+    const cryptoAmount =
+      type === OperationType.BUY
+        ? fiatAmountToNumber / price
+        : fiatAmountToNumber * price;
+
+    const newOrder: Operation = {
+      cryptoCurrency,
+      orderType,
+      fiatAmount: fiatAmountToNumber,
+      price,
+      type,
+      createdAt: dayjs(),
+      cryptoAmount,
+    };
+
+    console.log({newOrder});
 
     // setLoading(true);
 
@@ -67,10 +99,19 @@ const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
     // }
   };
 
+  const onSelectOperation = (value: OperationType) => {
+    setOperationType(value);
+  };
+
   return (
     <>
       <Pressable onPress={() => Keyboard.dismiss()} style={styles.container}>
         <View style={styles.formWrapper}>
+          <RadioButton
+            data={operationTypeOptions}
+            selectedValue={operationType}
+            onSelect={onSelectOperation}
+          />
           <SelectInput
             name="cryptoCurrency"
             placeholder="Crypto currency"
@@ -89,7 +130,7 @@ const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
           <Spacer />
           <Text>${price}</Text>
           <FormInput
-            name="amount"
+            name="fiatAmount"
             placeholder="amount"
             control={control}
             keyboardType="number-pad"
@@ -105,19 +146,11 @@ const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
 
         <Spacer />
         <Button
-          accessibilityLabel="buy"
-          title="buy"
+          accessibilityLabel={isBuyOperation ? 'buy' : 'sell'}
+          title={isBuyOperation ? 'buy' : 'sell'}
           disabled={!isDirty || !isValid}
           loading={loading}
-          onPress={handleSubmit(data => onConfirm(data, OperationType.BUY))}
-        />
-        <Spacer />
-        <Button
-          accessibilityLabel="sell"
-          title="sell"
-          disabled={!isDirty || !isValid}
-          loading={loading}
-          onPress={handleSubmit(data => onConfirm(data, OperationType.SELL))}
+          onPress={handleSubmit(data => onConfirm(data, operationType))}
         />
       </Pressable>
     </>

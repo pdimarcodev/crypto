@@ -29,4 +29,4 @@ const OrdersContextProvider = ({children}: {children: ReactNode}) => {
 };
 
 export default OrdersContextProvider;
-export const useOrdesrContext = () => useContext(OrdersContext);
+export const useOrdersContext = () => useContext(OrdersContext);
