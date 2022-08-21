@@ -1,6 +1,7 @@
 import {createStackNavigator} from '@react-navigation/stack';
 import {Header} from '../components/Header';
-import {Home, Quote} from '../screens';
+import {Home} from '../screens/HomeScreen';
+import {OrderBook} from '../screens/OrderBook';
 
 /**
  * Types
@@ -37,7 +38,7 @@ export const Navigation = () => {
         screenOptions={{
           headerShown: false,
         }}>
-        <Stack.Screen name="OrderBook" component={Quote} />
+        <Stack.Screen name="OrderBook" component={OrderBook} />
       </Stack.Group>
     </Stack.Navigator>
   );

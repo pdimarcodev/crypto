@@ -55,7 +55,7 @@ const price = 20000;
  * Home Screen
  */
 
-const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
+export const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
   const {orders, setOrders} = useOrdersContext();
   const [loading, setLoading] = useState(false);
   const [operationType, setOperationType] = useState<OperationType>(
@@ -134,6 +134,9 @@ const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
   return (
     <>
       <Pressable onPress={() => Keyboard.dismiss()} style={styles.container}>
+        <Pressable onPress={() => navigate('OrderBook')}>
+          <Text>Order Book</Text>
+        </Pressable>
         <View style={styles.formWrapper}>
           <RadioButton
             data={operationTypeOptions}
@@ -200,5 +203,3 @@ const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
     </>
   );
 };
-
-export default Home;

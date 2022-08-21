@@ -1,32 +1,70 @@
 import {FC} from 'react';
-import {View, Text} from 'react-native';
+import {View, Text, SectionList, SectionListRenderItem} from 'react-native';
 import {StackScreenProps} from '@react-navigation/stack';
 
 import {NavigationStackParamList} from '../../navigation/navigation';
-import {Button} from '../../components/Button';
 import {styles} from './styles';
+import HeaderTitle from '../../components/HeaderTitle';
+import {Operation, OperationType, Order, OrderBookType} from '../../interfaces';
+import {useOrdersContext} from '../../context/OrdersContext';
+import {Divider} from '../../components/Divider';
 
 /**
  * Types
  */
 
-type QuoteScreenProps = StackScreenProps<NavigationStackParamList, 'OrderBook'>;
+type OrderBookScreenProps = StackScreenProps<
+  NavigationStackParamList,
+  'OrderBook'
+>;
+
+const renderItem: SectionListRenderItem<Operation, OrderBookType> = ({
+  item,
+}) => <Text>{item.createdAt.toString()}</Text>;
 
 /**
- * Quote Screen
+ * OrderBook Screen
  */
 
-const Quote: FC<QuoteScreenProps> = ({navigation: {reset}}) => {
+export const OrderBook: FC<OrderBookScreenProps> = ({navigation: {goBack}}) => {
+  const {orders, setOrders} = useOrdersContext();
+
+  const operations: OrderBookType[] = [
+    {
+      operationType: OperationType.BUY,
+      data: orders.filter(order => order.type === OperationType.BUY),
+    },
+    {
+      operationType: OperationType.SELL,
+      data: orders.filter(order => order.type === OperationType.SELL),
+    },
+  ];
+
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>TEXT</Text>
-      <Button
-        accessibilityLabel="scan again"
-        title="scan again"
-        onPress={() => {}}
+      <SectionList
+        ListHeaderComponent={() => <HeaderTitle title="Order Book" />}
+        // ListFooterComponent={() => (
+        //   <HeaderTitle title={'Total of houses: ' + operations.length} />
+        // )}
+        sections={operations}
+        renderItem={renderItem}
+        keyExtractor={(item, index) => item.createdAt.toString() + index}
+        stickySectionHeadersEnabled
+        renderSectionHeader={({section}) => (
+          <View style={{backgroundColor: 'white'}}>
+            <HeaderTitle title={section.operationType} />
+          </View>
+        )}
+        // renderSectionFooter={({section}) => (
+        //   <View style={{backgroundColor: 'white'}}>
+        //     <HeaderTitle title={'Total: ' + section.data.length} />
+        //   </View>
+        // )}
+        SectionSeparatorComponent={() => <Divider />}
+        ItemSeparatorComponent={() => <Divider />}
+        showsVerticalScrollIndicator={false}
       />
     </View>
   );
 };
-
-export default Quote;

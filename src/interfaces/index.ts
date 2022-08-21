@@ -25,3 +25,8 @@ export interface Operation {
   price: number;
   createdAt: Dayjs;
 }
+
+export type OrderBookType = {
+  operationType: OperationType;
+  data: Operation[];
+};
