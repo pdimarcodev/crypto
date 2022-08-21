@@ -1,4 +1,4 @@
-import {FC, useCallback, useEffect, useMemo, useState} from 'react';
+import {FC, useEffect, useMemo, useState} from 'react';
 import {Alert, Keyboard, Pressable, Text, View} from 'react-native';
 import {StackScreenProps} from '@react-navigation/stack';
 import {useForm} from 'react-hook-form';
@@ -15,7 +15,7 @@ import {
   OrderType,
 } from '../../interfaces';
 import {SelectInput} from '../../components/SelectInput';
-import {getOptions, isBuyOperationType} from '../../helpers';
+import {generateUUID, getOptions, isBuyOperationType} from '../../helpers';
 import {Spacer} from '../../components/Spacer';
 import {RadioButton} from '../../components/RadioButton';
 import dayjs from '../../helpers/dayjs';
@@ -25,13 +25,6 @@ import dayjs from '../../helpers/dayjs';
  */
 
 type HomeScreenProps = StackScreenProps<NavigationStackParamList, 'Home'>;
-
-/**
- * Constants
- */
-
-export const FIAT_REGEX = /^\d+(\.\d{1,2})?$/;
-export const CRYPTO_REGEX = /^\d+(\.\d{1,8})?$/;
 
 type OrderForm = Pick<Operation, 'cryptoCurrency' | 'orderType'> & {
   fiatAmount: string;
@@ -45,6 +38,11 @@ const DEFAULT_VALUES: OrderForm = {
   cryptoAmount: '',
 };
 
+/**
+ * Constants
+ */
+
+const ORDER_EXPIRATION_TIME = 60000;
 const operationTypeOptions = getOptions(OperationType);
 const cryptoCurrencyOptions = getOptions(CryptoCurrency);
 const orderTypeOptions = getOptions(OrderType);
@@ -57,13 +55,14 @@ const price = 20000;
 
 export const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
   const {orders, setOrders} = useOrdersContext();
+
   const [loading, setLoading] = useState(false);
+  const [updateOrders, setUpdateOrders] = useState(false);
   const [operationType, setOperationType] = useState<OperationType>(
     OperationType.BUY,
   );
   const {
     control,
-
     handleSubmit,
     reset,
     getValues,
@@ -84,6 +83,7 @@ export const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
     const cryptoAmountToNumber = Number(cryptoAmount.replace(',', '.'));
 
     const newOrder: Operation = {
+      id: generateUUID(10),
       cryptoCurrency,
       orderType,
       fiatAmount: !isBuyOperation
@@ -109,9 +109,12 @@ export const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
     setOrders([...orders, newOrder]);
     reset({...getValues(), fiatAmount: '', cryptoAmount: ''});
 
+    setTimeout(() => {
+      setUpdateOrders(true);
+    }, ORDER_EXPIRATION_TIME);
+
     Alert.alert('Limit order processed');
     setLoading(false);
-    return;
 
     // setLoading(true);
 
@@ -128,8 +131,14 @@ export const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
   };
 
   useEffect(() => {
-    console.log(orders);
-  }, [orders]);
+    if (updateOrders) {
+      const filteredOrders = orders.filter(
+        order => dayjs().diff(order.createdAt, 'ms') < ORDER_EXPIRATION_TIME,
+      );
+      setOrders(filteredOrders);
+      setUpdateOrders(false);
+    }
+  }, [orders, setOrders, updateOrders]);
 
   return (
     <>
@@ -168,10 +177,6 @@ export const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
               keyboardType="numeric"
               rules={{
                 required: true,
-                // pattern: {
-                //   value: FIAT_REGEX,
-                //   message: 'Enter a number',
-                // },
               }}
             />
           ) : (
@@ -182,10 +187,6 @@ export const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
               keyboardType="numeric"
               rules={{
                 required: true,
-                // pattern: {
-                //   value: CRYPTO_REGEX,
-                //   message: 'Enter a number',
-                // },
               }}
             />
           )}

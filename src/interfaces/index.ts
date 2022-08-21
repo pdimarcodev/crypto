@@ -17,6 +17,7 @@ export enum OrderType {
 }
 
 export interface Operation {
+  id: string;
   type: OperationType;
   cryptoCurrency: CryptoCurrency;
   orderType: OrderType;

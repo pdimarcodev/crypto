@@ -5,9 +5,11 @@ import {StackScreenProps} from '@react-navigation/stack';
 import {NavigationStackParamList} from '../../navigation/navigation';
 import {styles} from './styles';
 import HeaderTitle from '../../components/HeaderTitle';
-import {Operation, OperationType, Order, OrderBookType} from '../../interfaces';
+import {Operation, OperationType, OrderBookType} from '../../interfaces';
 import {useOrdersContext} from '../../context/OrdersContext';
 import {Divider} from '../../components/Divider';
+import {ShowIf} from '../../components/ShowIf';
+import dayjs from '../../helpers/dayjs';
 
 /**
  * Types
@@ -20,7 +22,9 @@ type OrderBookScreenProps = StackScreenProps<
 
 const renderItem: SectionListRenderItem<Operation, OrderBookType> = ({
   item,
-}) => <Text>{item.createdAt.toString()}</Text>;
+}) => {
+  return <Text>{item.createdAt.toString()}</Text>;
+};
 
 /**
  * OrderBook Screen
