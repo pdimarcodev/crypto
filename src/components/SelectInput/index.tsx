@@ -2,8 +2,6 @@ import {StyleSheet} from 'react-native';
 import {Control, Controller, Path} from 'react-hook-form';
 import RNPickerSelect from 'react-native-picker-select';
 import {CryptoCurrency} from '../../interfaces';
-import {Dispatch, SetStateAction} from 'react';
-import {getCryptoPrice} from '../../helpers';
 
 /**
  * Types
@@ -15,7 +13,7 @@ interface ISelectInput<ContentType> {
   data: any[];
   rules?: Object;
   placeholder?: string;
-  setPrice?: Dispatch<SetStateAction<number>>;
+  changePrice?: (cryptoCurrency: CryptoCurrency) => Promise<void>;
 }
 
 /**
@@ -28,16 +26,8 @@ export function SelectInput<ContentType>({
   data,
   rules = {},
   placeholder,
-  setPrice,
+  changePrice,
 }: ISelectInput<ContentType>) {
-  const changePrice = async (cryptoCurrency: CryptoCurrency) => {
-    if (!setPrice) {
-      return;
-    }
-    const newPrice = await getCryptoPrice(cryptoCurrency);
-    setPrice(newPrice);
-  };
-
   return (
     <Controller
       control={control}
@@ -52,7 +42,7 @@ export function SelectInput<ContentType>({
           value={value}
           onValueChange={e => {
             onChange(e);
-            changePrice(e);
+            changePrice && changePrice(e);
           }}
           items={data}
           useNativeAndroidPickerStyle={false}

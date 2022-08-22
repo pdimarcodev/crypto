@@ -8,8 +8,6 @@ import HeaderTitle from '../../components/HeaderTitle';
 import {Operation, OperationType, OrderBookType} from '../../interfaces';
 import {useOrdersContext} from '../../context/OrdersContext';
 import {Divider} from '../../components/Divider';
-import {ShowIf} from '../../components/ShowIf';
-import dayjs from '../../helpers/dayjs';
 
 /**
  * Types
@@ -21,17 +19,24 @@ type OrderBookScreenProps = StackScreenProps<
 >;
 
 const renderItem: SectionListRenderItem<Operation, OrderBookType> = ({
-  item,
+  item: {createdAt, cryptoCurrency, cryptoAmount, fiatAmount},
 }) => {
-  return <Text>{item.createdAt.toString()}</Text>;
+  return (
+    <Text>
+      <Text>{createdAt.format('HH:mm:ss')} </Text>
+      <Text>{cryptoCurrency}=</Text>
+      <Text>{cryptoAmount.toFixed(8)} </Text>
+      <Text>USD={fiatAmount.toFixed(2)}</Text>
+    </Text>
+  );
 };
 
 /**
  * OrderBook Screen
  */
 
-export const OrderBook: FC<OrderBookScreenProps> = ({navigation: {goBack}}) => {
-  const {orders, setOrders} = useOrdersContext();
+export const OrderBook: FC<OrderBookScreenProps> = () => {
+  const {orders} = useOrdersContext();
 
   const operations: OrderBookType[] = [
     {
@@ -47,10 +52,7 @@ export const OrderBook: FC<OrderBookScreenProps> = ({navigation: {goBack}}) => {
   return (
     <View style={styles.container}>
       <SectionList
-        ListHeaderComponent={() => <HeaderTitle title="Order Book" />}
-        // ListFooterComponent={() => (
-        //   <HeaderTitle title={'Total of houses: ' + operations.length} />
-        // )}
+        ListHeaderComponent={() => <HeaderTitle title="ORDER BOOK" />}
         sections={operations}
         renderItem={renderItem}
         keyExtractor={(item, index) => item.createdAt.toString() + index}
@@ -60,11 +62,6 @@ export const OrderBook: FC<OrderBookScreenProps> = ({navigation: {goBack}}) => {
             <HeaderTitle title={section.operationType} />
           </View>
         )}
-        // renderSectionFooter={({section}) => (
-        //   <View style={{backgroundColor: 'white'}}>
-        //     <HeaderTitle title={'Total: ' + section.data.length} />
-        //   </View>
-        // )}
         SectionSeparatorComponent={() => <Divider />}
         ItemSeparatorComponent={() => <Divider />}
         showsVerticalScrollIndicator={false}

@@ -2,7 +2,6 @@ import {View, Text, TextInput, TextInputProps, Keyboard} from 'react-native';
 import {Control, Controller, Path} from 'react-hook-form';
 
 import {ShowIf} from '../ShowIf';
-import {Icon} from '../Icon';
 import {styles} from './styles';
 
 /**
@@ -30,10 +29,7 @@ export function FormInput<ContentType>({
       control={control}
       name={name}
       rules={rules}
-      render={({
-        field: {value, onChange, onBlur},
-        fieldState: {isDirty, error},
-      }) => (
+      render={({field: {value, onChange, onBlur}, fieldState: {error}}) => (
         <>
           <View style={styles.container}>
             <TextInput
@@ -45,16 +41,6 @@ export function FormInput<ContentType>({
               style={styles.input}
               {...props}
             />
-            {/*
-            <ShowIf condition={isDirty}>
-              <View style={styles.icon}>
-                {!error ? (
-                  <Icon name="Ok" size={20} />
-                ) : (
-                  <Icon name="Warning" size={20} />
-                )}
-              </View>
-            </ShowIf> */}
           </View>
           <View style={styles.errorWrapper}>
             <ShowIf condition={!!error}>

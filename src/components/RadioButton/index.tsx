@@ -46,12 +46,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    width: 50,
   },
   itemNonSelected: {
     borderRadius: 50,
-    height: 24,
-    width: 24,
+    height: 60,
+    width: 60,
     marginRight: 10,
     backgroundColor: 'grey',
     justifyContent: 'center',
@@ -61,8 +60,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'blue',
   },
   text: {
-    fontSize: 11,
-    color: 'black',
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'white',
     padding: 4,
   },
   xGenderText: {

@@ -36,7 +36,8 @@ export const Navigation = () => {
       </Stack.Group>
       <Stack.Group
         screenOptions={{
-          headerShown: false,
+          headerShown: true,
+          title: '',
         }}>
         <Stack.Screen name="OrderBook" component={OrderBook} />
       </Stack.Group>

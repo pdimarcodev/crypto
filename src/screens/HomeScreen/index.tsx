@@ -52,8 +52,6 @@ const operationTypeOptions = getOptions(OperationType);
 const cryptoCurrencyOptions = getOptions(CryptoCurrency);
 const orderTypeOptions = getOptions(OrderType);
 
-// const price = 20000;
-
 /**
  * Home Screen
  */
@@ -115,8 +113,8 @@ export const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
         setLoading(false);
         return Alert.alert(
           isBuyOperation
-            ? `You've got ${cryptoCurrency} ${newOrder.cryptoAmount}`
-            : `You've got USD ${newOrder.fiatAmount}`,
+            ? `You've got ${cryptoCurrency} ${newOrder.cryptoAmount.toFixed(8)}`
+            : `You've got USD ${newOrder.fiatAmount.toFixed(2)}`,
         );
       }
 
@@ -137,6 +135,7 @@ export const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
   const onSelectOperation = (value: OperationType) => {
     reset(DEFAULT_VALUES);
     setOperationType(value);
+    changePrice(CryptoCurrency.BTC);
   };
 
   useEffect(() => {
@@ -156,22 +155,19 @@ export const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
   return (
     <>
       <Pressable onPress={() => Keyboard.dismiss()} style={styles.container}>
-        <Pressable onPress={() => navigate('OrderBook')}>
-          <Text>Order Book</Text>
-        </Pressable>
+        <RadioButton
+          data={operationTypeOptions}
+          selectedValue={operationType}
+          onSelect={onSelectOperation}
+        />
         <View style={styles.formWrapper}>
-          <RadioButton
-            data={operationTypeOptions}
-            selectedValue={operationType}
-            onSelect={onSelectOperation}
-          />
           <SelectInput
             name="cryptoCurrency"
             placeholder="Crypto currency"
             data={cryptoCurrencyOptions}
             control={control}
             rules={{required: true}}
-            setPrice={setPrice}
+            changePrice={changePrice}
           />
           <Spacer />
           <SelectInput
@@ -182,7 +178,6 @@ export const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
             rules={{required: true}}
           />
           <Spacer />
-          <Text>USD {price}</Text>
           {isBuyOperation ? (
             <FormInput
               name="fiatAmount"
@@ -204,8 +199,13 @@ export const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
               }}
             />
           )}
+          <Spacer />
+          <Text style={styles.price}>Price: USD {price}</Text>
+          <Spacer />
+          <Pressable onPress={() => navigate('OrderBook')}>
+            <Text style={styles.orderBook}>{'Order Book >'}</Text>
+          </Pressable>
         </View>
-
         <Spacer />
         <Button
           accessibilityLabel={isBuyOperation ? 'buy' : 'sell'}

@@ -11,8 +11,6 @@ export const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    // marginBottom: -8,
-    // marginLeft: -4,
     paddingHorizontal: 5,
     fontSize: 20,
     color: 'black',
