@@ -1,4 +1,5 @@
-import {OperationType} from '../interfaces';
+import axios from 'axios';
+import {CryptoCurrency, OperationType} from '../interfaces';
 
 export const getOptions = (type: any) =>
   (Object.keys(type) as (keyof typeof type)[]).map(key => ({
@@ -17,3 +18,10 @@ export function generateUUID(digits: number) {
   }
   return uuid.join('');
 }
+
+export const getCryptoPrice = async (cryptoCurrency: CryptoCurrency) => {
+  const response = await axios.get(
+    `https://api.binance.com/api/v3/ticker/price?symbol=${cryptoCurrency}USDT`,
+  );
+  return Number(response.data.price);
+};

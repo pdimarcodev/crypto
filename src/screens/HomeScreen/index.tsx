@@ -15,7 +15,12 @@ import {
   OrderType,
 } from '../../interfaces';
 import {SelectInput} from '../../components/SelectInput';
-import {generateUUID, getOptions, isBuyOperationType} from '../../helpers';
+import {
+  generateUUID,
+  getCryptoPrice,
+  getOptions,
+  isBuyOperationType,
+} from '../../helpers';
 import {Spacer} from '../../components/Spacer';
 import {RadioButton} from '../../components/RadioButton';
 import dayjs from '../../helpers/dayjs';
@@ -47,7 +52,7 @@ const operationTypeOptions = getOptions(OperationType);
 const cryptoCurrencyOptions = getOptions(CryptoCurrency);
 const orderTypeOptions = getOptions(OrderType);
 
-const price = 20000;
+// const price = 20000;
 
 /**
  * Home Screen
@@ -55,7 +60,7 @@ const price = 20000;
 
 export const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
   const {orders, setOrders} = useOrdersContext();
-
+  const [price, setPrice] = useState(0);
   const [loading, setLoading] = useState(false);
   const [updateOrders, setUpdateOrders] = useState(false);
   const [operationType, setOperationType] = useState<OperationType>(
@@ -74,55 +79,59 @@ export const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
     [operationType],
   );
 
-  const onConfirm = (
+  const changePrice = async (cryptoCurrency: CryptoCurrency) => {
+    const newPrice = await getCryptoPrice(cryptoCurrency);
+    setPrice(newPrice);
+  };
+
+  const onConfirm = async (
     {cryptoCurrency, orderType, fiatAmount, cryptoAmount}: OrderForm,
     type: OperationType,
   ) => {
     setLoading(true);
-    const fiatAmountToNumber = Number(fiatAmount.replace(',', '.'));
-    const cryptoAmountToNumber = Number(cryptoAmount.replace(',', '.'));
 
-    const newOrder: Operation = {
-      id: generateUUID(10),
-      cryptoCurrency,
-      orderType,
-      fiatAmount: !isBuyOperation
-        ? cryptoAmountToNumber * price
-        : fiatAmountToNumber,
-      price,
-      type,
-      createdAt: dayjs(),
-      cryptoAmount: isBuyOperation
-        ? fiatAmountToNumber / price
-        : cryptoAmountToNumber,
-    };
+    try {
+      changePrice(cryptoCurrency);
 
-    if (orderType === OrderType.MARKET) {
+      const fiatAmountToNumber = Number(fiatAmount.replace(',', '.'));
+      const cryptoAmountToNumber = Number(cryptoAmount.replace(',', '.'));
+
+      const newOrder: Operation = {
+        id: generateUUID(10),
+        cryptoCurrency,
+        orderType,
+        fiatAmount: !isBuyOperation
+          ? cryptoAmountToNumber * price
+          : fiatAmountToNumber,
+        price,
+        type,
+        createdAt: dayjs(),
+        cryptoAmount: isBuyOperation
+          ? fiatAmountToNumber / price
+          : cryptoAmountToNumber,
+      };
+
+      if (orderType === OrderType.MARKET) {
+        setLoading(false);
+        return Alert.alert(
+          isBuyOperation
+            ? `You've got ${cryptoCurrency} ${newOrder.cryptoAmount}`
+            : `You've got USD ${newOrder.fiatAmount}`,
+        );
+      }
+
+      setOrders([...orders, newOrder]);
+      reset({...getValues(), fiatAmount: '', cryptoAmount: ''});
+
+      setTimeout(() => {
+        setUpdateOrders(true);
+      }, ORDER_EXPIRATION_TIME);
       setLoading(false);
-      return Alert.alert(
-        isBuyOperation
-          ? `You've got ${cryptoCurrency} ${newOrder.cryptoAmount}`
-          : `You've got USD ${newOrder.fiatAmount}`,
-      );
+      Alert.alert('Limit order processed');
+    } catch (_) {
+      setLoading(false);
+      Alert.alert('Error', 'Something happened! Try again!');
     }
-
-    setOrders([...orders, newOrder]);
-    reset({...getValues(), fiatAmount: '', cryptoAmount: ''});
-
-    setTimeout(() => {
-      setUpdateOrders(true);
-    }, ORDER_EXPIRATION_TIME);
-
-    Alert.alert('Limit order processed');
-    setLoading(false);
-
-    // setLoading(true);
-
-    // try {
-    // } catch (_) {
-    //   setLoading(false);
-    //   Alert.alert('Error', 'Something happened! Try again!');
-    // }
   };
 
   const onSelectOperation = (value: OperationType) => {
@@ -139,6 +148,10 @@ export const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
       setUpdateOrders(false);
     }
   }, [orders, setOrders, updateOrders]);
+
+  useEffect(() => {
+    changePrice(CryptoCurrency.BTC);
+  }, []);
 
   return (
     <>
@@ -158,6 +171,7 @@ export const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
             data={cryptoCurrencyOptions}
             control={control}
             rules={{required: true}}
+            setPrice={setPrice}
           />
           <Spacer />
           <SelectInput
@@ -168,7 +182,7 @@ export const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
             rules={{required: true}}
           />
           <Spacer />
-          <Text>${price}</Text>
+          <Text>USD {price}</Text>
           {isBuyOperation ? (
             <FormInput
               name="fiatAmount"
