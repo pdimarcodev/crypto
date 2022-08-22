@@ -1,4 +1,4 @@
-import {FC} from 'react';
+import {FC, useCallback} from 'react';
 import {View, Text, SectionList, SectionListRenderItem} from 'react-native';
 import {StackScreenProps} from '@react-navigation/stack';
 
@@ -38,14 +38,23 @@ const renderItem: SectionListRenderItem<Operation, OrderBookType> = ({
 export const OrderBook: FC<OrderBookScreenProps> = () => {
   const {orders} = useOrdersContext();
 
+  const getOrdersByType = useCallback(
+    (type: OperationType): Operation[] =>
+      orders.filter(order => order.type === type),
+    [orders],
+  );
+
+  const buys = getOrdersByType(OperationType.BUY);
+  const sells = getOrdersByType(OperationType.SELL);
+
   const operations: OrderBookType[] = [
     {
       operationType: OperationType.BUY,
-      data: orders.filter(order => order.type === OperationType.BUY),
+      data: buys,
     },
     {
       operationType: OperationType.SELL,
-      data: orders.filter(order => order.type === OperationType.SELL),
+      data: sells,
     },
   ];
 
@@ -55,7 +64,7 @@ export const OrderBook: FC<OrderBookScreenProps> = () => {
         ListHeaderComponent={() => <HeaderTitle title="ORDER BOOK" />}
         sections={operations}
         renderItem={renderItem}
-        keyExtractor={(item, index) => item.createdAt.toString() + index}
+        keyExtractor={({id}) => id}
         stickySectionHeadersEnabled
         renderSectionHeader={({section}) => (
           <View style={{backgroundColor: 'white'}}>

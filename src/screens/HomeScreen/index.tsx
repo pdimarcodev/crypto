@@ -78,14 +78,20 @@ export const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
   );
 
   const changePrice = async (cryptoCurrency: CryptoCurrency) => {
-    const newPrice = await getCryptoPrice(cryptoCurrency);
-    setPrice(newPrice);
+    try {
+      const newPrice = await getCryptoPrice(cryptoCurrency);
+      setPrice(newPrice);
+    } catch (_) {
+      Alert.alert('Error', 'Something happened! Try again!');
+    }
   };
 
-  const onConfirm = async (
-    {cryptoCurrency, orderType, fiatAmount, cryptoAmount}: OrderForm,
-    type: OperationType,
-  ) => {
+  const onConfirm = ({
+    cryptoCurrency,
+    orderType,
+    fiatAmount,
+    cryptoAmount,
+  }: OrderForm) => {
     setLoading(true);
 
     try {
@@ -102,7 +108,7 @@ export const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
           ? cryptoAmountToNumber * price
           : fiatAmountToNumber,
         price,
-        type,
+        type: operationType,
         createdAt: dayjs(),
         cryptoAmount: isBuyOperation
           ? fiatAmountToNumber / price
@@ -124,7 +130,9 @@ export const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
       setTimeout(() => {
         setUpdateOrders(true);
       }, ORDER_EXPIRATION_TIME);
+
       setLoading(false);
+
       Alert.alert('Limit order processed');
     } catch (_) {
       setLoading(false);
@@ -212,7 +220,7 @@ export const Home: FC<HomeScreenProps> = ({navigation: {navigate}}) => {
           title={isBuyOperation ? 'buy' : 'sell'}
           disabled={!isDirty || !isValid}
           loading={loading}
-          onPress={handleSubmit(data => onConfirm(data, operationType))}
+          onPress={handleSubmit(onConfirm)}
         />
       </Pressable>
     </>
