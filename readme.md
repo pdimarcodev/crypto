@@ -23,7 +23,7 @@ npm run ios -- --device
 
 ## Watch demo:
 
-## [Link to video]('./demo/SettleCryptoDemo.mp4')
+## [Link to video](https://github.com/pdimarcodev/crypto/blob/master/demo/SettleCryptoDemo.mp4)
 
 <br/>
 
